@@ -164,27 +164,58 @@ void Tensor::debug() const {
 }
 
 bool Tensor::isContiguous() const {
-    TO_BE_IMPLEMENTED();
+    auto& meta = this->_meta;
+    auto& strides = meta.strides;
+    auto& shape = meta.shape;
+    size_t ndim = shape.size();
+    size_t expected_stride = 1;
+    for(int i = ndim - 1; i >= 0; i--) {
+        if((size_t)strides[i] != expected_stride) {
+            return false;
+        }
+        expected_stride *= shape[i];
+    }
     return true;
 }
 
 tensor_t Tensor::permute(const std::vector<size_t> &order) const {
-    TO_BE_IMPLEMENTED();
-    return std::shared_ptr<Tensor>(new Tensor(_meta, _storage));
+    std::vector<ptrdiff_t> strides(order.size());
+    std::vector<size_t> shape(order.size());
+    for (size_t i = 0; i < order.size(); i++) {
+        shape[i] = _meta.shape[order[i]];
+        strides[i] = _meta.strides[order[i]];
+    }
+    TensorMeta meta{_meta.dtype, shape, strides};
+    return std::shared_ptr<Tensor>(new Tensor(meta, _storage));
 }
 
 tensor_t Tensor::view(const std::vector<size_t> &shape) const {
-    TO_BE_IMPLEMENTED();
-    return std::shared_ptr<Tensor>(new Tensor(_meta, _storage));
+    size_t ndim_ = shape.size();
+    std::vector<ptrdiff_t> strides(ndim_);
+    size_t stride = 1;
+    for (size_t i = 1; i <= ndim_; i++) {
+        strides[ndim_ - i] = stride;
+        stride *= shape[ndim_ - i];
+    }
+    TensorMeta meta{_meta.dtype, shape, strides};
+    return std::shared_ptr<Tensor>(new Tensor(meta, _storage));
 }
 
 tensor_t Tensor::slice(size_t dim, size_t start, size_t end) const {
-    TO_BE_IMPLEMENTED();
-    return std::shared_ptr<Tensor>(new Tensor(_meta, _storage));
+    std::vector<ptrdiff_t> strides = _meta.strides; // strides 不变
+    std::vector<size_t> shape = _meta.shape;
+    shape[dim] = end - start;
+    size_t offset = _offset + start * _meta.strides[dim] * this->elementSize();
+    TensorMeta meta{_meta.dtype, shape, strides};
+    return std::shared_ptr<Tensor>(new Tensor(meta, _storage, offset));
 }
 
 void Tensor::load(const void *src_) {
-    TO_BE_IMPLEMENTED();
+    core::context().runtime().api()->memcpy_sync(
+            this->data(),
+            src_,
+            this->numel() * this->elementSize(),
+            LLAISYS_MEMCPY_H2D);
 }
 
 tensor_t Tensor::contiguous() const {

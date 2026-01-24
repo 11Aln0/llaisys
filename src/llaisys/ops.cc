@@ -34,8 +34,8 @@ __C {
     void llaisysROPE(llaisysTensor_t out, llaisysTensor_t in, llaisysTensor_t pos_ids, float theta) {
         llaisys::ops::rope(out->tensor, in->tensor, pos_ids->tensor, theta);
     }
-    void llaisysSelfAttention(llaisysTensor_t attn_val, llaisysTensor_t q, llaisysTensor_t k, llaisysTensor_t v, float scale) {
-        llaisys::ops::self_attention(attn_val->tensor, q->tensor, k->tensor, v->tensor, scale);
+    void llaisysSelfAttention(llaisysTensor_t attn_val, llaisysTensor_t attn_weight, llaisysTensor_t q, llaisysTensor_t k, llaisysTensor_t v, float scale) {
+        llaisys::ops::self_attention(attn_val->tensor, attn_weight->tensor, q->tensor, k->tensor, v->tensor, scale);
     }
     void llaisysSwiGLU(llaisysTensor_t out, llaisysTensor_t gate, llaisysTensor_t up) {
         llaisys::ops::swiglu(out->tensor, gate->tensor, up->tensor);

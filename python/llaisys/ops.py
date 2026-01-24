@@ -41,9 +41,10 @@ class Ops:
         )
 
     @staticmethod
-    def self_attention(attn_val: Tensor, q: Tensor, k: Tensor, v: Tensor, scale: float):
+    def self_attention(attn_val: Tensor, attn_weight: Tensor, q: Tensor, k: Tensor, v: Tensor, scale: float):
         LIB_LLAISYS.llaisysSelfAttention(
             attn_val.lib_tensor(),
+            attn_weight.lib_tensor(),
             q.lib_tensor(),
             k.lib_tensor(),
             v.lib_tensor(),

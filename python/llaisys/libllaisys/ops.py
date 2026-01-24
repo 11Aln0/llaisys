@@ -25,6 +25,7 @@ def load_ops(lib):
 
     lib.llaisysSelfAttention.argtypes = [
         llaisysTensor_t,  # attn_val
+        llaisysTensor_t,  # attn_weight
         llaisysTensor_t,  # q
         llaisysTensor_t,  # k
         llaisysTensor_t,  # v

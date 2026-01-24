@@ -11,6 +11,8 @@ target("llaisys-device-cpu")
     on_install(function (target) end)
 target_end()
 
+add_requires("openmp")
+
 target("llaisys-ops-cpu")
     set_kind("static")
     add_deps("llaisys-tensor")
@@ -21,6 +23,7 @@ target("llaisys-ops-cpu")
     end
 
     add_files("../src/ops/*/cpu/*.cpp")
+    add_packages("openmp")
 
     on_install(function (target) end)
 target_end()

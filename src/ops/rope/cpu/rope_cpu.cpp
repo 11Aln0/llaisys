@@ -4,7 +4,7 @@
 #include <cmath>
 
 template <typename T>
-void _rope(T *out, const T *in, const int64_t *ops_id, float theta,
+void _rope(T *out, const T *in, const int64_t *pos_id, float theta,
                size_t seq_len, size_t nhead, size_t head_dim) {
     using llaisys::utils::cast;
     // head_dim must be even
@@ -12,7 +12,7 @@ void _rope(T *out, const T *in, const int64_t *ops_id, float theta,
 
     for (size_t s = 0; s < seq_len; ++s) {
         // position id
-        float pos = static_cast<float>(ops_id[s]);
+        float pos = static_cast<float>(pos_id[s]);
 
         for (size_t h = 0; h < nhead; ++h) {
             const size_t base = (s * nhead + h) * head_dim;

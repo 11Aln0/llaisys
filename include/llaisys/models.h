@@ -1,10 +1,12 @@
-#ifndef LLAISYS_MODELS_QWEN2_H
-#define LLAISYS_MODELS_QWEN2_H
+#ifndef LLAISYS_MODELS_H
+#define LLAISYS_MODELS_H
 
-#include "../tensor.h"
+#include "tensor.h"
 
 __C {
-    // Opaque handle types
+    // ============ Qwen2 Model ============
+
+    // Opaque handle type
     typedef struct LlaisysQwen2Model *llaisysQwen2Model_t;
 
     // Meta structure (public, for initialization)
@@ -35,7 +37,7 @@ __C {
     };
 
     __export llaisysQwen2Model_t llaisysQwen2ModelCreate(
-        const struct LlaisysQwen2Meta *meta,
+        const LlaisysQwen2Meta *meta,
         llaisysDeviceType_t device,
         int *device_ids,
         int ndevice);
@@ -43,12 +45,8 @@ __C {
     __export void llaisysQwen2ModelDestroy(
         llaisysQwen2Model_t model);
 
-    __export struct LlaisysQwen2Weights *llaisysQwen2ModelWeights(
+    __export LlaisysQwen2Weights *llaisysQwen2ModelWeights(
         llaisysQwen2Model_t model);
-
-    __export llaisysTensor_t llaisysQwen2ModelGetWeight(
-        llaisysQwen2Model_t model,
-        const char *name);
 
     __export int64_t llaisysQwen2ModelInfer(
         llaisysQwen2Model_t model,
@@ -56,4 +54,4 @@ __C {
         size_t ntoken);
 }
 
-#endif // LLAISYS_MODELS_QWEN2_H
+#endif // LLAISYS_MODELS_H

@@ -207,7 +207,7 @@ tensor_t Tensor::slice(size_t dim, size_t start, size_t end) const {
     shape[dim] = end - start;
     size_t offset = _offset + start * _meta.strides[dim] * this->elementSize();
     TensorMeta meta{_meta.dtype, shape, strides};
-    return std::shared_ptr<Tensor>(new Tensor(meta, _storage, offset));
+    return std::make_shared<Tensor>(meta, _storage, offset);
 }
 
 void Tensor::load(const void *src_) {

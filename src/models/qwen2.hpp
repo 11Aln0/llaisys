@@ -37,30 +37,61 @@ struct Qwen2Weights {
 };
 
 struct Qwen2InternalBuffers {
+  tensor_t pos_id; // [max_seq_len]
+  tensor_t embed_out; // [max_seq_len, hidden_size]
+  tensor_t rms_norm_out; // for decoder rmsx2 + lm_head rms [max_seq_len, hidden_size]
+  // attention
+  tensor_t q_out; // [max_seq_len, num_heads * head_dim]
+  tensor_t s; // buffer for attention_score [num_heads, max_seq_len, max_seq_len]
+  tensor_t attn_out; // [max_seq_len, num_heads * head_dim]
+  tensor_t o_proj_out; // [max_seq_len, hidden_size]
+  // no need for redisual
+  // feed-forward
+  tensor_t mlp_gate_out; // [max_seq_len, inter_size] (reused for swiglu out) 
+  tensor_t mlp_up_out; // [max_seq_len, inter_size]
+  tensor_t mlp_down_out; // [max_seq_len, hidden_size]
 
+  tensor_t lm_head_out; // [max_seq_len, vocab_size]
+};
 
-
+struct Qwen2KVCache {
+  tensor_t* k; // [max_seq_len, num_kv_heads * head_dim] x nlayer
+  tensor_t* v; // [max_seq_len, num_kv_heads * head_dim] x nlayer
 };
 
 class Qwen2Model {
 public:
-    Qwen2Model(const Qwen2Meta& meta, llaisysDeviceType_t device, 
-               const std::vector<int>& device_ids);
-    ~Qwen2Model();
+  Qwen2Model(const Qwen2Meta& meta, llaisysDeviceType_t device, 
+              const std::vector<int>& device_ids);
+  ~Qwen2Model();
 
-    Qwen2Weights* weights() { return &weights_; }
-    int64_t infer(const int64_t* token_ids, size_t ntoken);
+  Qwen2Weights* weights() { return &weights_; }
+  int64_t infer(const int64_t* token_ids, size_t ntoken);
 
 private:
-    void initEncoderLayerWeight(int layer);
-    void initEncoderLayersWeight();
-    void initWeights();
-    void initInternalBuffers();
+  // mem
+  void initEncoderLayerWeight(int layer);
+  void initEncoderLayersWeight();
+  void initWeights();
+  void initInternalBuffers();
+  void initKVCache();
+  // forward
+  void forwardEmbedding(const tensor_t input_ids);
+  void forwardRMSNorm(const tensor_t input, const tensor_t weight,
+                      tensor_t output, float epsilon);
+  void forwardAttention(tensor_t input, int layer);
+  void forwardFeedForward(int layer);
+  void forwardEncoder();
+  void forwardLMHead();
+
 private:
-    Qwen2Meta meta_;
-    Qwen2Weights weights_;
-    llaisysDeviceType_t device_;
-    std::vector<int> device_ids_;
+  bool is_decode_stage = false;
+  Qwen2Meta meta_;
+  Qwen2Weights weights_;
+  Qwen2InternalBuffers internal_buffers_;
+  Qwen2KVCache kvcache_;
+  llaisysDeviceType_t device_;
+  std::vector<int> device_ids_;
 };
 
 using qwen2_model_t = std::shared_ptr<Qwen2Model>;

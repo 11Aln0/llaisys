@@ -5,9 +5,11 @@ namespace llaisys {
 
 Qwen2Model::Qwen2Model(const Qwen2Meta& meta, llaisysDeviceType_t device,
                        const std::vector<int>& device_ids)
-    : meta_(meta), device_(device), device_ids_(device_ids) {
+    : meta_(meta), device_(device), device_ids_(device_ids), is_decode_stage(false) {
     
     initWeights();
+    initInternalBuffers();
+    initKVCache();
 }
 
 Qwen2Model::~Qwen2Model() {
@@ -27,11 +29,9 @@ Qwen2Model::~Qwen2Model() {
     weights_.in_embed = nullptr;
     weights_.out_embed = nullptr;
     weights_.out_norm_w = nullptr;
-}
-
-int64_t Qwen2Model::infer(const int64_t* token_ids, size_t ntoken) {
-    // TODO: Implement inference
-    return -1;
+    // kv cache
+    delete[] kvcache_.k;
+    delete[] kvcache_.v;
 }
 
 void Qwen2Model::initEncoderLayerWeight(int layer) {
@@ -96,8 +96,55 @@ void Qwen2Model::initWeights() {
 }
 
 void Qwen2Model::initInternalBuffers() {
+  using llaisys::Tensor;
+  auto& buf = internal_buffers_;
+  auto dtype = meta_.dtype;
+  auto devId = device_ids_[0];
 
+  size_t maxseq = meta_.maxseq;
+  size_t hs = meta_.hs;
+  size_t q_hdim = meta_.nh * meta_.dh;
+  size_t kv_hdim = meta_.nkvh * meta_.dh;
+  size_t di = meta_.di;
+  size_t voc = meta_.voc;
+  // pos_id
+  buf.pos_id = Tensor::create({maxseq}, LLAISYS_DTYPE_I64, device_, devId);
+  // embedding output
+  buf.embed_out = Tensor::create({maxseq, hs}, dtype, device_, devId);
+  // rms norm output (shared for decoder rms x2 + lm_head rms)
+  buf.rms_norm_out = Tensor::create({maxseq, hs}, dtype, device_, devId);
 
+  // attention buffers
+  buf.q_out = Tensor::create({maxseq, q_hdim}, dtype, device_, devId);
+  buf.s = Tensor::create({meta_.nh, maxseq, maxseq}, dtype, device_, devId);
+  buf.attn_out = Tensor::create({maxseq, q_hdim}, dtype, device_, devId);
+  buf.o_proj_out = Tensor::create({maxseq, hs}, dtype, device_, devId);
+
+  // feed-forward buffers
+  buf.mlp_gate_out = Tensor::create({maxseq, di}, dtype, device_, devId);
+  buf.mlp_up_out = Tensor::create({maxseq, di}, dtype, device_, devId);
+  buf.mlp_down_out = Tensor::create({maxseq, hs}, dtype, device_, devId);
+
+  // lm head output
+  buf.lm_head_out = Tensor::create({maxseq, voc}, dtype, device_, devId);
+}
+
+void Qwen2Model::initKVCache() {
+  using llaisys::Tensor;
+  auto dtype = meta_.dtype;
+  auto devId = device_ids_[0];
+
+  size_t nlayer = meta_.nlayer;
+  size_t maxseq = meta_.maxseq;
+  size_t kv_hdim = meta_.nkvh * meta_.dh;
+
+  kvcache_.k = new tensor_t[nlayer];
+  kvcache_.v = new tensor_t[nlayer];
+
+  for (size_t i = 0; i < nlayer; ++i) {
+    kvcache_.k[i] = Tensor::create({maxseq, kv_hdim}, dtype, device_, devId);
+    kvcache_.v[i] = Tensor::create({maxseq, kv_hdim}, dtype, device_, devId);
+  }
 }
 
 } // namespace llaisys

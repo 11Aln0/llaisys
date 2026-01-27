@@ -1,6 +1,7 @@
 #include "llaisys_models.hpp"
 
 #include <vector>
+#include <string>
 
 // Helper to convert public meta to internal meta
 static llaisys::Qwen2Meta toInternalMeta(const LlaisysQwen2Meta *meta) {

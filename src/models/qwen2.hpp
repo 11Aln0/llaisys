@@ -37,6 +37,7 @@ struct Qwen2Weights {
 };
 
 struct Qwen2InternalBuffers {
+  tensor_t token_ids; // [max_seq_len]
   tensor_t pos_id; // [max_seq_len]
   tensor_t embed_out; // [max_seq_len, hidden_size]
   tensor_t rms_norm_out; // for decoder rmsx2 + lm_head rms [max_seq_len, hidden_size]
@@ -52,6 +53,9 @@ struct Qwen2InternalBuffers {
   tensor_t mlp_down_out; // [max_seq_len, hidden_size]
 
   tensor_t lm_head_out; // [max_seq_len, vocab_size]
+
+  tensor_t token_ids; // [max_seq_len]
+  tensor_t max_logits_token; // [max_seq_len]
 };
 
 struct Qwen2KVCache {
@@ -75,17 +79,19 @@ private:
   void initWeights();
   void initInternalBuffers();
   void initKVCache();
+  void fillPosIds();
   // forward
-  void forwardEmbedding(const tensor_t input_ids);
-  void forwardRMSNorm(const tensor_t input, const tensor_t weight,
-                      tensor_t output, float epsilon);
-  void forwardAttention(tensor_t input, int layer);
-  void forwardFeedForward(int layer);
-  void forwardEncoder();
-  void forwardLMHead();
+  tensor_t forwardEmbedding(const tensor_t input_ids);
+  tensor_t forwardRMSNorm(const tensor_t input, const tensor_t weight, float epsilon);
+  tensor_t forwardAttention(tensor_t input, int layer);
+  tensor_t forwardFeedForward(tensor_t input, int layer);
+  tensor_t forwardEncoder(tensor_t input, int layer);
+  tensor_t forwardLMHead(tensor_t input);
+  tensor_t forward(tensor_t input);
 
 private:
-  bool is_decode_stage = false;
+  // bool is_decoding = false;
+  int64_t pos_id = 0;
   Qwen2Meta meta_;
   Qwen2Weights weights_;
   Qwen2InternalBuffers internal_buffers_;

@@ -5,11 +5,12 @@ namespace llaisys {
 
 Qwen2Model::Qwen2Model(const Qwen2Meta& meta, llaisysDeviceType_t device,
                        const std::vector<int>& device_ids)
-    : meta_(meta), device_(device), device_ids_(device_ids), is_decode_stage(false) {
+    : meta_(meta), device_(device), device_ids_(device_ids), pos_id(0) {
     
     initWeights();
     initInternalBuffers();
     initKVCache();
+    fillPosIds();
 }
 
 Qwen2Model::~Qwen2Model() {
@@ -107,6 +108,9 @@ void Qwen2Model::initInternalBuffers() {
   size_t kv_hdim = meta_.nkvh * meta_.dh;
   size_t di = meta_.di;
   size_t voc = meta_.voc;
+
+  // token_ids
+  buf.token_ids = Tensor::create({maxseq}, LLAISYS_DTYPE_I64, device_, devId);
   // pos_id
   buf.pos_id = Tensor::create({maxseq}, LLAISYS_DTYPE_I64, device_, devId);
   // embedding output
@@ -127,6 +131,11 @@ void Qwen2Model::initInternalBuffers() {
 
   // lm head output
   buf.lm_head_out = Tensor::create({maxseq, voc}, dtype, device_, devId);
+
+  // token ids
+  buf.token_ids = Tensor::create({maxseq}, LLAISYS_DTYPE_I64, device_, devId);
+  // max logits token
+  buf.max_logits_token = Tensor::create({maxseq}, LLAISYS_DTYPE_I64, device_, devId);
 }
 
 void Qwen2Model::initKVCache() {
@@ -144,6 +153,13 @@ void Qwen2Model::initKVCache() {
   for (size_t i = 0; i < nlayer; ++i) {
     kvcache_.k[i] = Tensor::create({maxseq, kv_hdim}, dtype, device_, devId);
     kvcache_.v[i] = Tensor::create({maxseq, kv_hdim}, dtype, device_, devId);
+  }
+}
+
+void Qwen2Model::fillPosIds() {
+  auto pos_id_data = reinterpret_cast<int64_t*>(internal_buffers_.pos_id->data());
+  for (size_t i = 0; i < meta_.maxseq; ++i) {
+    pos_id_data[i] = static_cast<int64_t>(i);
   }
 }
 

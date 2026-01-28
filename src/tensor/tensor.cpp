@@ -168,7 +168,7 @@ bool Tensor::isContiguous() const {
     auto& meta = this->_meta;
     auto& strides = meta.strides;
     auto& shape = meta.shape;
-    size_t ndim = (int)shape.size();
+    int ndim = (int)shape.size();
     ptrdiff_t expected_stride = 1;
     for(int i = ndim - 1; i >= 0; i--) {
         if(strides[i] != expected_stride) {
@@ -225,8 +225,7 @@ tensor_t Tensor::contiguous() const {
 }
 
 tensor_t Tensor::reshape(const std::vector<size_t> &shape) const {
-    // TODO check size match
-    if((size_t)std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<size_t>()) != this->numel()) {
+    if(std::accumulate(shape.begin(), shape.end(), (size_t)(1), std::multiplies<size_t>()) != this->numel()) {
         throw std::runtime_error("Reshape size mismatch");
     }
     std::vector<ptrdiff_t> strides(shape.size());

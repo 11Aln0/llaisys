@@ -13,7 +13,7 @@ void linear(tensor_t out, tensor_t in, tensor_t weight, tensor_t bias) {
 
     llaisys::core::context().setDevice(out->deviceType(), out->deviceId());
 
-    int m = in->shape()[0], n = weight->shape()[0], k = weight->shape()[1];
+    size_t m = in->shape()[0], n = weight->shape()[0], k = weight->shape()[1];
 
     switch (out->deviceType()) {
     case LLAISYS_DEVICE_CPU:

@@ -10,8 +10,8 @@ void embedding(tensor_t out, tensor_t index, tensor_t weight) {
 
     llaisys::core::context().setDevice(out->deviceType(), out->deviceId());
 
-    int index_numel = index->numel();
-    int embedding_dim = weight->shape()[1];
+    size_t index_numel = index->numel();
+    size_t embedding_dim = weight->shape()[1];
 
         switch (out->deviceType()) {
     case LLAISYS_DEVICE_CPU:

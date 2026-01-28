@@ -207,7 +207,7 @@ tensor_t Tensor::slice(size_t dim, size_t start, size_t end) const {
     shape[dim] = end - start;
     size_t offset = _offset + start * _meta.strides[dim] * this->elementSize();
     TensorMeta meta{_meta.dtype, shape, strides};
-    return std::make_shared<Tensor>(meta, _storage, offset);
+    return std::shared_ptr<Tensor>(new Tensor(meta, _storage, offset));
 }
 
 void Tensor::load(const void *src_) {
@@ -224,8 +224,16 @@ tensor_t Tensor::contiguous() const {
 }
 
 tensor_t Tensor::reshape(const std::vector<size_t> &shape) const {
-    TO_BE_IMPLEMENTED();
-    return std::shared_ptr<Tensor>(new Tensor(_meta, _storage));
+    // TODO check size match
+    std::vector<ptrdiff_t> strides(shape.size());
+    size_t ndim_ = shape.size();
+    size_t stride = 1;
+    for (size_t i = 1; i <= ndim_; i++) {
+        strides[ndim_ - i] = stride;
+        stride *= shape[ndim_ - i];
+    }
+    TensorMeta meta{_meta.dtype, shape, strides};
+    return std::shared_ptr<Tensor>(new Tensor(meta, _storage, _offset));
 }
 
 tensor_t Tensor::to(llaisysDeviceType_t device_type, int device) const {

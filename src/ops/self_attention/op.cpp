@@ -9,10 +9,11 @@ void self_attention(tensor_t attn_val, tensor_t attn_weight, tensor_t q, tensor_
     CHECK_SAME_DTYPE(attn_val->dtype(), attn_weight->dtype(), q->dtype(), k->dtype(), v->dtype());
 
     size_t q_len = q->shape()[0];
-    size_t kv_len = k->shape()[0];
     size_t nhead = q->shape()[1];
-    size_t n_kvhead = k->shape()[1];
     size_t head_dim = q->shape()[2];
+
+    size_t kv_len = k->shape()[0];
+    size_t n_kvhead = k->shape()[1];
 
     switch (attn_val->deviceType()) {
     case LLAISYS_DEVICE_CPU:

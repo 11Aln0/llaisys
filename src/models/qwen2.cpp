@@ -5,7 +5,7 @@ namespace llaisys {
 
 Qwen2Model::Qwen2Model(const Qwen2Meta& meta, llaisysDeviceType_t device,
                        const std::vector<int>& device_ids)
-    : meta_(meta), device_(device), device_ids_(device_ids), pos_id(0) {
+    : pos_id(0), meta_(meta), device_(device), device_ids_(device_ids) {
     
     initWeights();
     initInternalBuffers();
@@ -105,7 +105,6 @@ void Qwen2Model::initInternalBuffers() {
   size_t maxseq = meta_.maxseq;
   size_t hs = meta_.hs;
   size_t q_hdim = meta_.nh * meta_.dh;
-  size_t kv_hdim = meta_.nkvh * meta_.dh;
   size_t di = meta_.di;
   size_t voc = meta_.voc;
 
@@ -132,8 +131,6 @@ void Qwen2Model::initInternalBuffers() {
   // lm head output
   buf.lm_head_out = Tensor::create({maxseq, voc}, dtype, device_, devId);
 
-  // token ids
-  buf.token_ids = Tensor::create({maxseq}, LLAISYS_DTYPE_I64, device_, devId);
   // max logits token
   buf.max_logits_token = Tensor::create({maxseq}, LLAISYS_DTYPE_I64, device_, devId);
 }

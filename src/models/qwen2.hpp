@@ -54,7 +54,7 @@ struct Qwen2InternalBuffers {
 
   tensor_t lm_head_out; // [max_seq_len, vocab_size]
 
-  tensor_t token_ids; // [max_seq_len]
+  // tensor_t next_token_ids; // [max_seq_len]
   tensor_t max_logits_token; // [max_seq_len]
 };
 
@@ -70,6 +70,7 @@ public:
   ~Qwen2Model();
 
   Qwen2Weights* weights() { return &weights_; }
+  size_t numLayers() const { return meta_.nlayer; }
   int64_t infer(const int64_t* token_ids, size_t ntoken);
 
 private:
@@ -91,7 +92,7 @@ private:
 
 private:
   // bool is_decoding = false;
-  int64_t pos_id = 0;
+  int64_t pos_id;
   Qwen2Meta meta_;
   Qwen2Weights weights_;
   Qwen2InternalBuffers internal_buffers_;

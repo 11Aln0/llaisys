@@ -5,7 +5,9 @@
 
 namespace llaisys::ops {
 void linear(tensor_t out, tensor_t in, tensor_t weight, tensor_t bias) {
-    CHECK_SAME_DEVICE(out, in, weight, bias);
+    CHECK_SAME_DEVICE(out, in, weight);
+    if (bias) CHECK_SAME_DEVICE(out, bias);
+
     CHECK_SAME_DTYPE(out->dtype(), in->dtype(), weight->dtype());
 
     llaisys::core::context().setDevice(out->deviceType(), out->deviceId());

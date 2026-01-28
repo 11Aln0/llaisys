@@ -88,9 +88,8 @@ void Qwen2Model::initWeights() {
       .mlp_down_w = new tensor_t[nlayer],
   };
 
-  auto embed_weight = llaisys::Tensor::create({meta_.voc, meta_.hs}, dtype, device_, device_ids_[0]);
-  weights_.in_embed = embed_weight;
-  weights_.out_embed = embed_weight;
+  weights_.in_embed = llaisys::Tensor::create({meta_.voc, meta_.hs}, dtype, device_, device_ids_[0]);
+  weights_.out_embed = llaisys::Tensor::create({meta_.voc, meta_.hs}, dtype, device_, device_ids_[0]);;
   weights_.out_norm_w = llaisys::Tensor::create({meta_.hs}, dtype, device_, device_ids_[0]);
   
   initEncoderLayersWeight();
@@ -132,7 +131,7 @@ void Qwen2Model::initInternalBuffers() {
   buf.lm_head_out = Tensor::create({maxseq, voc}, dtype, device_, devId);
 
   // max logits token
-  buf.max_logits_token = Tensor::create({maxseq}, LLAISYS_DTYPE_I64, device_, devId);
+  buf.max_logits = Tensor::create({1}, LLAISYS_DTYPE_I64, device_, devId);
 }
 
 void Qwen2Model::initKVCache() {

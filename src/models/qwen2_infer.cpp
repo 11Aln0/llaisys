@@ -144,21 +144,23 @@ tensor_t Qwen2Model::forward(tensor_t input) {
   // lm head
   auto lm_head_out = forwardLMHead(lm_norm_out);
     
-  // get argmax token id
-  auto token_ids = internal_buffers_.token_ids->slice(0, 0, hidden->shape()[0]);
-  llaisys::ops::argmax(token_ids, internal_buffers_.max_logits_token, lm_head_out);
+  // get argmax token id (only for the last token position)
+  size_t seq_len = hidden->shape()[0];
+  auto last_logits = lm_head_out->slice(0, seq_len - 1, seq_len);  // [1, vocab_size]
+  auto token_id = internal_buffers_.token_ids->slice(0, 0, 1);
+  llaisys::ops::argmax(token_id, internal_buffers_.max_logits, last_logits);
 
-  return token_ids;
+  return token_id;
 }
 
 int64_t Qwen2Model::infer(const int64_t* token_ids, size_t ntoken) {
   // if(is_decoding) *reinterpret_cast<int64_t*>(internal_buffers_.pos_id->data()) = pos_id;
-  printf("Infer called with ntoken=%zu, pos_id=%ld\n", ntoken, pos_id);
+  // printf("Infer called with ntoken=%zu, pos_id=%ld\n", ntoken, pos_id);
   auto token_ids_tensor = internal_buffers_.token_ids->slice(0, 0, ntoken);
   token_ids_tensor->load(token_ids);
-  auto next_token_ids = forward(token_ids_tensor);
-  int64_t next_token_id = *(reinterpret_cast<int64_t*>(
-      next_token_ids->data()) + ntoken - 1);
+  auto next_token_id_tensor = forward(token_ids_tensor);
+  int64_t next_token_id = *reinterpret_cast<int64_t*>(
+      next_token_id_tensor->data());
   pos_id += ntoken;
   return next_token_id;
 }

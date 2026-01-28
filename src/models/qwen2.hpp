@@ -55,7 +55,7 @@ struct Qwen2InternalBuffers {
   tensor_t lm_head_out; // [max_seq_len, vocab_size]
 
   // tensor_t next_token_ids; // [max_seq_len]
-  tensor_t max_logits_token; // [max_seq_len]
+  tensor_t max_logits; // [1]
 };
 
 struct Qwen2KVCache {

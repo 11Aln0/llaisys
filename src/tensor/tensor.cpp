@@ -5,6 +5,7 @@
 #include <cstring>
 #include <numeric>
 #include <sstream>
+#include <exception>
 
 namespace llaisys {
 
@@ -225,6 +226,9 @@ tensor_t Tensor::contiguous() const {
 
 tensor_t Tensor::reshape(const std::vector<size_t> &shape) const {
     // TODO check size match
+    if((size_t)std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<size_t>()) != this->numel()) {
+        throw std::runtime_error("Reshape size mismatch");
+    }
     std::vector<ptrdiff_t> strides(shape.size());
     size_t ndim_ = shape.size();
     size_t stride = 1;

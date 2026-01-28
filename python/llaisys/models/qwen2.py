@@ -209,7 +209,7 @@ class Qwen2:
         if handle is None:
             # Unknown weight, skip silently
             return
-        print(f"Loading weight: {name}")
+        # print(f"Loading weight: {name}")
         # # Ensure dtype/contiguity match target
         # arr = np_arr.astype(self._np_dtype, copy=False)
         # if not arr.flags["C_CONTIGUOUS"]:

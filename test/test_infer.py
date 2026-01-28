@@ -144,6 +144,6 @@ if __name__ == "__main__":
     print("\n")
     print(f"Time elapsed: {(end_time - start_time):.2f}s\n")
 
-    # if args.test:
-    #     assert llaisys_tokens == tokens
-    #     print("\033[92mTest passed!\033[0m\n")
+    if args.test:
+        assert llaisys_tokens == tokens
+        print("\033[92mTest passed!\033[0m\n")

@@ -131,14 +131,14 @@ class Qwen2:
         token_ids = list(inputs)
         input_token_ids = token_ids
         if max_new_tokens is None:
-            max_new_tokens = 100
+            max_new_tokens = 2048
 
         for _ in range(max_new_tokens):
             next_token = self.infer(input_token_ids)
-            if next_token == self._meta.end_token:
-                break
             token_ids.append(next_token)
             input_token_ids = [next_token]  # Feed only the last token for next step
+            if next_token == self._meta.end_token:
+                break
             print(f"Generated token: {next_token}", flush=True)
 
         return token_ids

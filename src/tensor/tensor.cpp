@@ -168,10 +168,10 @@ bool Tensor::isContiguous() const {
     auto& meta = this->_meta;
     auto& strides = meta.strides;
     auto& shape = meta.shape;
-    size_t ndim = shape.size();
-    size_t expected_stride = 1;
+    size_t ndim = (int)shape.size();
+    ptrdiff_t expected_stride = 1;
     for(int i = ndim - 1; i >= 0; i--) {
-        if((size_t)strides[i] != expected_stride) {
+        if(strides[i] != expected_stride) {
             return false;
         }
         expected_stride *= shape[i];

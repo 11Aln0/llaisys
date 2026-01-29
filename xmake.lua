@@ -105,6 +105,13 @@ target("llaisys-models")
     if not is_plat("windows") then
         add_cxflags("-fPIC", "-Wno-unknown-pragmas")
     end
+    -- add_cxxflags(
+    --     "-Wall",
+    --     "-Wconversion",
+    --     "-Wsign-conversion",
+    --     "-Werror",
+    --     {force = true}
+    -- )
 
     add_files("src/models/*.cpp")
 

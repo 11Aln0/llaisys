@@ -35,7 +35,7 @@ Qwen2Model::~Qwen2Model() {
     delete[] kvcache_.v;
 }
 
-void Qwen2Model::initEncoderLayerWeight(int layer) {
+void Qwen2Model::initEncoderLayerWeight(size_t layer) {
   using llaisys::Tensor;
   auto& w = weights_;
   auto dtype = meta_.dtype;
@@ -110,7 +110,7 @@ void Qwen2Model::initInternalBuffers() {
   // token_ids
   buf.token_ids = Tensor::create({maxseq}, LLAISYS_DTYPE_I64, device_, devId);
   // pos_id
-  buf.pos_id = Tensor::create({maxseq}, LLAISYS_DTYPE_I64, device_, devId);
+  buf.pos_ids = Tensor::create({maxseq}, LLAISYS_DTYPE_I64, device_, devId);
   // embedding output
   buf.embed_out = Tensor::create({maxseq, hs}, dtype, device_, devId);
   // rms norm output (shared for decoder rms x2 + lm_head rms)
@@ -153,7 +153,7 @@ void Qwen2Model::initKVCache() {
 }
 
 void Qwen2Model::fillPosIds() {
-  auto pos_id_data = reinterpret_cast<int64_t*>(internal_buffers_.pos_id->data());
+  auto pos_id_data = reinterpret_cast<int64_t*>(internal_buffers_.pos_ids->data());
   for (size_t i = 0; i < meta_.maxseq; ++i) {
     pos_id_data[i] = static_cast<int64_t>(i);
   }

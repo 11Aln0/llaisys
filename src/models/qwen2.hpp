@@ -38,7 +38,7 @@ struct Qwen2Weights {
 
 struct Qwen2InternalBuffers {
   tensor_t token_ids; // [max_seq_len]
-  tensor_t pos_id; // [max_seq_len]
+  tensor_t pos_ids; // [max_seq_len]
   tensor_t embed_out; // [max_seq_len, hidden_size]
   tensor_t rms_norm_out; // for decoder rmsx2 + lm_head rms [max_seq_len, hidden_size]
   // attention
@@ -75,7 +75,7 @@ public:
 
 private:
   // mem
-  void initEncoderLayerWeight(int layer);
+  void initEncoderLayerWeight(size_t layer);
   void initEncoderLayersWeight();
   void initWeights();
   void initInternalBuffers();
@@ -84,9 +84,9 @@ private:
   // forward
   tensor_t forwardEmbedding(const tensor_t input_ids);
   tensor_t forwardRMSNorm(const tensor_t input, const tensor_t weight, float epsilon);
-  tensor_t forwardAttention(tensor_t input, int layer);
-  tensor_t forwardFeedForward(tensor_t input, int layer);
-  tensor_t forwardEncoder(tensor_t input, int layer);
+  tensor_t forwardAttention(tensor_t input, size_t layer);
+  tensor_t forwardFeedForward(tensor_t input, size_t layer);
+  tensor_t forwardEncoder(tensor_t input, size_t layer);
   tensor_t forwardLMHead(tensor_t input);
   tensor_t forward(tensor_t input);
 

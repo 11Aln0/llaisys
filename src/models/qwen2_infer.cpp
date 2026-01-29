@@ -24,14 +24,15 @@ tensor_t Qwen2Model::forwardRMSNorm(const tensor_t input, const tensor_t weight,
   return output;
 }
 
-tensor_t Qwen2Model::forwardAttention(tensor_t input, int layer) {
+tensor_t Qwen2Model::forwardAttention(tensor_t input, size_t layer) {
   auto& buf = internal_buffers_;
   size_t seq_len = input->shape()[0];
+  size_t pid = (size_t)pos_id;
   auto q_out = buf.q_out->slice(0, 0, seq_len);
-  auto k_cache_out = kvcache_.k[layer]->slice(0, pos_id, pos_id + seq_len);
-  auto v_cache_out = kvcache_.v[layer]->slice(0, pos_id, pos_id + seq_len);
-  auto k_out = kvcache_.k[layer]->slice(0, 0, pos_id + seq_len);
-  auto v_out = kvcache_.v[layer]->slice(0, 0, pos_id + seq_len);
+  auto k_cache_out = kvcache_.k[layer]->slice(0, pid, pid + seq_len);
+  auto v_cache_out = kvcache_.v[layer]->slice(0, pid, pid + seq_len);
+  auto k_out = kvcache_.k[layer]->slice(0, 0, pid + seq_len);
+  auto v_out = kvcache_.v[layer]->slice(0, 0, pid + seq_len);
   auto attn_out = buf.attn_out->slice(0, 0, seq_len);
   auto o_proj_out = buf.o_proj_out->slice(0, 0, seq_len);
   // q
@@ -39,7 +40,7 @@ tensor_t Qwen2Model::forwardAttention(tensor_t input, int layer) {
                        input,
                        weights_.attn_q_w[layer],
                        weights_.attn_q_b[layer]);
-  auto pos_ids = internal_buffers_.pos_id->slice(0, pos_id, pos_id + seq_len);
+  auto pos_ids = internal_buffers_.pos_ids->slice(0, pid, pid + seq_len);
   q_out = q_out->reshape({seq_len, meta_.nh, meta_.dh});
   llaisys::ops::rope(q_out, q_out, pos_ids, meta_.theta);
   // k
@@ -56,8 +57,8 @@ tensor_t Qwen2Model::forwardAttention(tensor_t input, int layer) {
                        weights_.attn_v_b[layer]);
   
   // attention
-  k_out = k_out->reshape({pos_id + seq_len, meta_.nkvh, meta_.dh});
-  v_out = v_out->reshape({pos_id + seq_len, meta_.nkvh, meta_.dh});
+  k_out = k_out->reshape({pid + seq_len, meta_.nkvh, meta_.dh});
+  v_out = v_out->reshape({pid + seq_len, meta_.nkvh, meta_.dh});
   float scale = 1.0f / sqrtf(static_cast<float>(meta_.dh));
   llaisys::ops::self_attention(attn_out,
                                internal_buffers_.s, // temp buffer, not need to slice
@@ -73,7 +74,7 @@ tensor_t Qwen2Model::forwardAttention(tensor_t input, int layer) {
   return o_proj_out;
 }
 
-tensor_t Qwen2Model::forwardFeedForward(tensor_t input, int layer) {
+tensor_t Qwen2Model::forwardFeedForward(tensor_t input, size_t layer) {
   auto& buf = internal_buffers_;
   size_t seq_len = input->shape()[0];
   auto mlp_gate_out = buf.mlp_gate_out->slice(0, 0, seq_len);
@@ -113,7 +114,7 @@ tensor_t Qwen2Model::forwardLMHead(tensor_t input) {
   return lm_head_out;
 }
 
-tensor_t Qwen2Model::forwardEncoder(tensor_t input, int layer) {
+tensor_t Qwen2Model::forwardEncoder(tensor_t input, size_t layer) {
   auto pre_atten_rms_out = forwardRMSNorm(input,
                                           weights_.attn_norm_w[layer],
                                           meta_.epsilon);
@@ -161,7 +162,7 @@ int64_t Qwen2Model::infer(const int64_t* token_ids, size_t ntoken) {
   auto next_token_id_tensor = forward(token_ids_tensor);
   int64_t next_token_id = *reinterpret_cast<int64_t*>(
       next_token_id_tensor->data());
-  pos_id += ntoken;
+  pos_id += (int64_t)ntoken;
   return next_token_id;
 }
 

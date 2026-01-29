@@ -7,7 +7,7 @@ void _embedding(T *out, const int64_t *index, const T *weight,
                size_t index_numel,
                size_t embedding_dim) {
     for (size_t i = 0; i < index_numel; i++) {
-        int64_t idx = index[i];
+        uint64_t idx = (uint64_t)index[i];
         for (size_t j = 0; j < embedding_dim; j++) {
             out[i * embedding_dim + j] = weight[idx * embedding_dim + j];
         }

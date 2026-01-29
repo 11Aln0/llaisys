@@ -12,7 +12,7 @@ void computeScore(T *attn_weight, const T *q, const T *k, float scale,
                   size_t head_dim) {
   using llaisys::utils::cast;
 
-  const int offset = static_cast<int>(kv_len - q_len);
+  const size_t offset = static_cast<size_t>(kv_len - q_len);
 
   #pragma omp parallel for schedule(static)
   for(size_t ih = 0; ih < nhead; ++ih) {
@@ -28,7 +28,7 @@ void computeScore(T *attn_weight, const T *q, const T *k, float scale,
           nhead * head_dim,    // lda
           n_kvhead * head_dim,    // ldb
           kv_len,       // ldc
-          [scale, offset](float acc, int row, int col) {
+          [scale, offset](float acc, size_t row, size_t col) {
             // causal mask: col <= row + offset (where offset = kv_len - q_len)
             acc += (col <= row + offset ? 0.0f : -INFINITY);
             return llaisys::utils::cast<T>(acc * scale);

@@ -19,7 +19,7 @@ void _rope(T *out, const T *in, const int64_t *pos_id, float theta,
 
             for (size_t i = 0; i < half_dim; ++i) {
                 // compute rotation angle
-                float freq = std::pow(theta, 2.0f * i / head_dim);
+                float freq = std::pow(theta, 2.0f * (float)i / (float)head_dim);
                 
                 float angle = pos / freq;
 

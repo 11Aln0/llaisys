@@ -12,7 +12,7 @@ void _rms_norm(T *out, const T *in, const T *weight, float eps,
         for (size_t j = 0; j < feature_dim; ++j) {
             sum_of_squares += in[i * feature_dim + j] * in[i * feature_dim + j];
         }
-        float rms = std::sqrt(sum_of_squares / feature_dim + eps);  
+        float rms = std::sqrt(sum_of_squares / (float)feature_dim + eps);  
 
         for (size_t j = 0; j < feature_dim; ++j) {
             out[i * feature_dim + j] = cast<T>(cast<float>(in[i * feature_dim + j]) / rms * cast<float>(weight[j]));  

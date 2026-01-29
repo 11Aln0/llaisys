@@ -5,7 +5,7 @@
 #include "gemm.h"
 
 template <typename T>
-T defaultEpilogue(float acc, int batch_idx, int row_idx, int col_idx) {
+T defaultEpilogue(float acc, size_t batch_idx, size_t row_idx, size_t col_idx) {
     return llaisys::utils::cast<T>(acc);
 }
 
@@ -18,16 +18,16 @@ void batch_gemm_cpu_blocked_omp(
     const T* A,
     const T* B,
     T* C,
-    int batch,
-    int M,
-    int N,
-    int K,
-    ptrdiff_t batch_stride_A,
-    ptrdiff_t batch_stride_B,
-    ptrdiff_t batch_stride_C,
-    int lda,
-    int ldb,
-    int ldc,
+    size_t batch,
+    size_t M,
+    size_t N,
+    size_t K,
+    size_t batch_stride_A,
+    size_t batch_stride_B,
+    size_t batch_stride_C,
+    size_t lda,
+    size_t ldb,
+    size_t ldc,
     Epilogue epilogue = defaultEpilogue<T>
 ) {
     using llaisys::utils::cast;

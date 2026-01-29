@@ -14,7 +14,8 @@ void _linear(T *out, const T *in, const T *weight, const T* bias,
         k,        // lda
         k,        // ldb
         n,        // ldc
-        [bias] (float acc, int im, int in) -> T{
+        [bias] (float acc, size_t im, size_t in) -> T{
+            (void)im;
             if (bias != nullptr) {
                 acc += llaisys::utils::cast<float>(bias[in]);
             }

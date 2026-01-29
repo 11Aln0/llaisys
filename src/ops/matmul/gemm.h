@@ -39,9 +39,12 @@ void gemm_cpu_blocked_omp(
     constexpr int BN = 64;
     constexpr int BK = 64;
 
-    const int64_t nblk_i = (M + BM - 1) / BM;
-    const int64_t nblk_j = (N + BN - 1) / BN;
+    const int64_t nblk_i = (int64_t)((M + BM - 1) / BM);
+    const int64_t nblk_j = (int64_t)((N + BN - 1) / BN);
     const int64_t nblk   = nblk_i * nblk_j;
+    const int64_t lda64 = (int64_t)lda;
+    const int64_t ldb64 = (int64_t)ldb;
+    const int64_t ldc64 = (int64_t)ldc;
 
 #pragma omp parallel for schedule(static)
     for (int64_t b = 0; b < nblk; ++b) {
@@ -68,14 +71,14 @@ void gemm_cpu_blocked_omp(
             int64_t kmax = std::min(k0 + BK, (int64_t)K);
 
             for (int64_t im = i0; im < imax; ++im) {
-                const T* aptr = A + im * lda + k0;
+                const T* aptr = A + im * lda64 + k0;
                 float*   acc_row = acc_buf[im - i0];
 
                 for (int64_t k = k0; k < kmax; ++k) {
                     float a = cast<float>(aptr[k - k0]);
 
                     if constexpr (LayoutB == Layout::RowMajor) {
-                        const T* bptr = B + k * ldb + j0;
+                        const T* bptr = B + k * ldb64 + j0;
                         for (int64_t in = j0; in < jmax; ++in) {
                             acc_row[in - j0] +=
                                 a * cast<float>(bptr[in - j0]);
@@ -83,7 +86,7 @@ void gemm_cpu_blocked_omp(
                     } else {
                         for (int64_t in = j0; in < jmax; ++in) {
                             acc_row[in - j0] +=
-                                a * cast<float>(B[in * ldb + k]);
+                                a * cast<float>(B[in * ldb64 + k]);
                         }
                     }
                 }
@@ -92,7 +95,7 @@ void gemm_cpu_blocked_omp(
 
         // epilogue + store
         for (int64_t im = i0; im < imax; ++im) {
-            T* cptr = C + im * ldc + j0;
+            T* cptr = C + im * ldc64 + j0;
             float* acc_row = acc_buf[im - i0];
 
             for (int64_t in = j0; in < jmax; ++in) {

@@ -13,12 +13,15 @@ void computeScore(T *attn_weight, const T *q, const T *k, float scale,
   using llaisys::utils::cast;
 
   const int64_t offset = static_cast<int64_t>(kv_len - q_len);
+  const int64_t nh = (int64_t)nhead;
+  const int64_t nkvh = (int64_t)n_kvhead;
+  const int64_t hd = (int64_t)head_dim;
 
-//   #pragma omp parallel for schedule(static)
-  for(int64_t ih = 0; ih < (int64_t)nhead; ++ih) {
-      const T* q_head = q + ih * head_dim; // [q_len, nhead, head_dim]
-      const T* k_head = k + (ih / (nhead / n_kvhead)) * head_dim;
-      T*       attn_head = attn_weight + ih * q_len * kv_len;
+  //   #pragma omp parallel for schedule(static)
+  for(int64_t ih = 0; ih < nh; ++ih) {
+      const T* q_head = q + ih * hd; // [q_len, nhead, head_dim]
+      const T* k_head = k + (ih / (nh / nkvh)) * hd;
+      T*       attn_head = attn_weight + ih * (int64_t)(q_len * kv_len);
 
       gemm_cpu_blocked_omp<T, Layout::ColMajor>(
           q_head, k_head, attn_head,
@@ -41,30 +44,34 @@ template <typename T>
 void softmax(T *attn_score, size_t q_len, size_t kv_len, size_t nhead) {
     using llaisys::utils::cast;
 
-    int64_t parallel_n = (int64_t)nhead * (int64_t)q_len;
+    const int64_t ql = (int64_t)q_len;
+    const int64_t kvl = (int64_t)kv_len;
+    const int64_t nh = (int64_t)nhead;
+
+    int64_t parallel_n = nh * ql;
 
     #pragma omp parallel for schedule(static)
     for(int64_t idx = 0; idx < parallel_n; idx++) {
-        int64_t h = idx / (int64_t)q_len;
-        int64_t q_idx = idx % (int64_t)q_len;
-        const int64_t base = (h * q_len + q_idx) * kv_len;
+        int64_t h = idx / ql;
+        int64_t q_idx = idx % ql;
+        const int64_t base = (h * ql + q_idx) * kvl;
 
         // find max for numerical stability
         float max_val = -INFINITY;
-        for (int64_t k_idx = 0; k_idx < (int64_t)kv_len; ++k_idx) {
+        for (int64_t k_idx = 0; k_idx < kvl; ++k_idx) {
             float val = cast<float>(attn_score[base + k_idx]);
             max_val = std::max(max_val, val);
         }
 
         // compute sum of exp
         float sum_exp = 0.0f;
-        for (int64_t k_idx = 0; k_idx < (int64_t)kv_len; ++k_idx) {
+        for (int64_t k_idx = 0; k_idx < kvl; ++k_idx) {
             float val = cast<float>(attn_score[base + k_idx]);
             sum_exp += std::exp(val - max_val);
         }
 
         // normalize
-        for (int64_t k_idx = 0; k_idx < (int64_t)kv_len; ++k_idx) {
+        for (int64_t k_idx = 0; k_idx < kvl; ++k_idx) {
             float val = cast<float>(attn_score[base + k_idx]);
             attn_score[base + k_idx] = cast<T>(std::exp(val - max_val) / sum_exp);
         }
@@ -78,11 +85,17 @@ void computeAttnVal(T *out, const T *attn_weight, const T *v,
                     size_t head_dim) {
     using llaisys::utils::cast;
 
+    const int64_t ql = (int64_t)q_len;
+    const int64_t kvl = (int64_t)kv_len;
+    const int64_t nh = (int64_t)nhead;
+    const int64_t nkvh = (int64_t)n_kvhead;
+    const int64_t hd = (int64_t)head_dim;
+
     // #pragma omp parallel for schedule(static)
-    for(int64_t ih = 0; ih < (int64_t)nhead; ++ih) {
-        const T* attn_head = attn_weight + ih * q_len * kv_len;
-        const T* v_head = v + (ih / (nhead / n_kvhead)) * head_dim;  // GQA: map Q head to KV head
-        T*       out_head = out + ih * head_dim;
+    for(int64_t ih = 0; ih < nh; ++ih) {
+        const T* attn_head = attn_weight + ih * ql * kvl;
+        const T* v_head = v + (ih / (nh / nkvh)) * hd;  // GQA: map Q head to KV head
+        T*       out_head = out + ih * hd;
 
         gemm_cpu_blocked_omp<T, Layout::RowMajor>(
             attn_head, v_head, out_head,

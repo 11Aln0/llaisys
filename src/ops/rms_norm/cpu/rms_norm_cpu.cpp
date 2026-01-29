@@ -7,17 +7,20 @@
 template <typename T>
 void _rms_norm(T *out, const T *in, const T *weight, float eps,
                size_t batch_size, size_t feature_dim) {
+    int64_t fd = (int64_t)feature_dim;
+    int64_t bs = (int64_t)batch_size;
+
     using llaisys::utils::cast;
     #pragma omp parallel for schedule(static)
-    for (int64_t i = 0; i < (int64_t)batch_size; ++i) {
+    for (int64_t i = 0; i < bs; ++i) {
         float sum_of_squares = 0.0f;
-        for (int64_t j = 0; j < (int64_t)feature_dim; ++j) {
-            sum_of_squares += in[i * feature_dim + j] * in[i * feature_dim + j];
+        for (int64_t j = 0; j < fd; ++j) {
+            sum_of_squares += in[i * fd + j] * in[i * fd + j];
         }
-        float rms = std::sqrt(sum_of_squares / (float)feature_dim + eps);  
+        float rms = std::sqrt(sum_of_squares / (float)fd + eps);
 
-        for (int64_t j = 0; j < (int64_t)feature_dim; ++j) {
-            out[i * feature_dim + j] = cast<T>(cast<float>(in[i * feature_dim + j]) / rms * cast<float>(weight[j]));  
+        for (int64_t j = 0; j < fd; ++j) {
+            out[i * fd+ j] = cast<T>(cast<float>(in[i * fd + j]) / rms * cast<float>(weight[j]));  
         }
     }
 }

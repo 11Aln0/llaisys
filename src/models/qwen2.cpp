@@ -70,26 +70,24 @@ void Qwen2Model::initEncoderLayersWeight() {
 void Qwen2Model::initWeights() {
   llaisysDataType_t dtype = meta_.dtype;
   size_t nlayer = meta_.nlayer;
-  weights_ = {
-      .in_embed = nullptr,
-      .out_embed = nullptr,
-      .out_norm_w = nullptr,
-      .attn_norm_w = new tensor_t[nlayer],
-      .attn_q_w = new tensor_t[nlayer],
-      .attn_q_b = new tensor_t[nlayer],
-      .attn_k_w = new tensor_t[nlayer],
-      .attn_k_b = new tensor_t[nlayer],
-      .attn_v_w = new tensor_t[nlayer],
-      .attn_v_b = new tensor_t[nlayer],
-      .attn_o_w = new tensor_t[nlayer],
-      .mlp_norm_w = new tensor_t[nlayer],
-      .mlp_gate_w = new tensor_t[nlayer],
-      .mlp_up_w = new tensor_t[nlayer],
-      .mlp_down_w = new tensor_t[nlayer],
-  };
+  weights_.in_embed = nullptr;
+  weights_.out_embed = nullptr;
+  weights_.out_norm_w = nullptr;
+  weights_.attn_norm_w = new tensor_t[nlayer];
+  weights_.attn_q_w = new tensor_t[nlayer];
+  weights_.attn_q_b = new tensor_t[nlayer];
+  weights_.attn_k_w = new tensor_t[nlayer];
+  weights_.attn_k_b = new tensor_t[nlayer];
+  weights_.attn_v_w = new tensor_t[nlayer];
+  weights_.attn_v_b = new tensor_t[nlayer];
+  weights_.attn_o_w = new tensor_t[nlayer];
+  weights_.mlp_norm_w = new tensor_t[nlayer];
+  weights_.mlp_gate_w = new tensor_t[nlayer];
+  weights_.mlp_up_w = new tensor_t[nlayer];
+  weights_.mlp_down_w = new tensor_t[nlayer];
 
   weights_.in_embed = llaisys::Tensor::create({meta_.voc, meta_.hs}, dtype, device_, device_ids_[0]);
-  weights_.out_embed = llaisys::Tensor::create({meta_.voc, meta_.hs}, dtype, device_, device_ids_[0]);;
+  weights_.out_embed = llaisys::Tensor::create({meta_.voc, meta_.hs}, dtype, device_, device_ids_[0]);
   weights_.out_norm_w = llaisys::Tensor::create({meta_.hs}, dtype, device_, device_ids_[0]);
   
   initEncoderLayersWeight();

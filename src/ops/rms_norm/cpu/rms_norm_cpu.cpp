@@ -2,11 +2,13 @@
 #include "../../../utils.hpp"
 #include "rms_norm_cpu.hpp"
 #include <cmath>
+#include <omp.h>
 
 template <typename T>
 void _rms_norm(T *out, const T *in, const T *weight, float eps,
                size_t batch_size, size_t feature_dim) {
     using llaisys::utils::cast;
+    #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < batch_size; ++i) {
         float sum_of_squares = 0.0f;
         for (size_t j = 0; j < feature_dim; ++j) {

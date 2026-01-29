@@ -2,6 +2,7 @@
 #include "../../../utils.hpp"
 #include "rope_cpu.hpp"
 #include <cmath>
+#include <omp.h>
 
 template <typename T>
 void _rope(T *out, const T *in, const int64_t *pos_id, float theta,
@@ -10,11 +11,12 @@ void _rope(T *out, const T *in, const int64_t *pos_id, float theta,
     // head_dim must be even
     const size_t half_dim = head_dim / 2;
 
+    #pragma omp parallel for collapse(2) schedule(static)
     for (size_t s = 0; s < seq_len; ++s) {
-        // position id
-        float pos = static_cast<float>(pos_id[s]);
-
+        
         for (size_t h = 0; h < nhead; ++h) {
+            // position id
+            float pos = static_cast<float>(pos_id[s]);
             const size_t base = (s * nhead + h) * head_dim;
 
             for (size_t i = 0; i < half_dim; ++i) {

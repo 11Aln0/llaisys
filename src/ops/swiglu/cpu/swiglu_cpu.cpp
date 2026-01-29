@@ -2,11 +2,13 @@
 #include "../../../utils.hpp"
 #include "swiglu_cpu.hpp"
 #include <cmath>
+#include <omp.h>
 
 template <typename T>
 void _swiglu(T *out, const T *gate, const T *up, size_t size) {
     using llaisys::utils::cast;
 
+    #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < size; ++i) {
         // SwiGLU: swish(gate) * up = (gate * sigmoid(gate)) * up
         float g = cast<float>(gate[i]);

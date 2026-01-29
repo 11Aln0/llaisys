@@ -9,7 +9,7 @@ void _swiglu(T *out, const T *gate, const T *up, size_t size) {
     using llaisys::utils::cast;
 
     #pragma omp parallel for schedule(static)
-    for (size_t i = 0; i < size; ++i) {
+    for (int64_t i = 0; i < (int64_t)size; ++i) {
         // SwiGLU: swish(gate) * up = (gate * sigmoid(gate)) * up
         float g = cast<float>(gate[i]);
         float u = cast<float>(up[i]);

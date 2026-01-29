@@ -3,10 +3,12 @@
 #include "../../../utils.hpp"
 
 #include <cmath>
+#include <omp.h>
 
 template <typename T>
 void add_(T *c, const T *a, const T *b, size_t numel) {
-    for (size_t i = 0; i < numel; i++) {
+    #pragma omp parallel for schedule(static)
+    for (int64_t i = 0; i < (int64_t)numel; i++) {
         if constexpr (std::is_same_v<T, llaisys::bf16_t> || std::is_same_v<T, llaisys::fp16_t>) {
             c[i] = llaisys::utils::cast<T>(llaisys::utils::cast<float>(a[i]) + llaisys::utils::cast<float>(b[i]));
         } else {

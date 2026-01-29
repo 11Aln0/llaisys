@@ -9,17 +9,17 @@ void _rope(T *out, const T *in, const int64_t *pos_id, float theta,
                size_t seq_len, size_t nhead, size_t head_dim) {
     using llaisys::utils::cast;
     // head_dim must be even
-    const size_t half_dim = head_dim / 2;
+    const int64_t half_dim = head_dim / 2;
 
     #pragma omp parallel for collapse(2) schedule(static)
-    for (size_t s = 0; s < seq_len; ++s) {
-        
-        for (size_t h = 0; h < nhead; ++h) {
+    for (int64_t s = 0; s < (int64_t)seq_len; ++s) {
+
+        for (int64_t h = 0; h < (int64_t)nhead; ++h) {
             // position id
             float pos = static_cast<float>(pos_id[s]);
-            const size_t base = (s * nhead + h) * head_dim;
+            const int64_t base = (s * nhead + h) * head_dim;
 
-            for (size_t i = 0; i < half_dim; ++i) {
+            for (int64_t i = 0; i < half_dim; ++i) {
                 // compute rotation angle
                 float freq = std::pow(theta, 2.0f * (float)i / (float)head_dim);
                 
@@ -28,8 +28,8 @@ void _rope(T *out, const T *in, const int64_t *pos_id, float theta,
                 float cos_t = std::cos(angle);
                 float sin_t = std::sin(angle);
 
-                size_t even_idx = base + i;
-                size_t odd_idx  = base + half_dim + i;
+                int even_idx = base + i;
+                int odd_idx  = base + half_dim + i;
 
                 float x_even = cast<float>(in[even_idx]);
                 float x_odd  = cast<float>(in[odd_idx]);

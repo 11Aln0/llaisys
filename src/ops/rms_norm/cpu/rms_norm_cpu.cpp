@@ -9,14 +9,14 @@ void _rms_norm(T *out, const T *in, const T *weight, float eps,
                size_t batch_size, size_t feature_dim) {
     using llaisys::utils::cast;
     #pragma omp parallel for schedule(static)
-    for (size_t i = 0; i < batch_size; ++i) {
+    for (int64_t i = 0; i < (int64_t)batch_size; ++i) {
         float sum_of_squares = 0.0f;
-        for (size_t j = 0; j < feature_dim; ++j) {
+        for (int64_t j = 0; j < (int64_t)feature_dim; ++j) {
             sum_of_squares += in[i * feature_dim + j] * in[i * feature_dim + j];
         }
         float rms = std::sqrt(sum_of_squares / (float)feature_dim + eps);  
 
-        for (size_t j = 0; j < feature_dim; ++j) {
+        for (int64_t j = 0; j < (int64_t)feature_dim; ++j) {
             out[i * feature_dim + j] = cast<T>(cast<float>(in[i * feature_dim + j]) / rms * cast<float>(weight[j]));  
         }
     }

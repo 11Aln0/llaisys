@@ -11,37 +11,40 @@ void _rope(T *out, const T *in, const int64_t *pos_id, float theta,
     // head_dim must be even
     const int64_t half_dim = head_dim / 2;
 
-    #pragma omp parallel for collapse(2) schedule(static)
-    for (int64_t s = 0; s < (int64_t)seq_len; ++s) {
+    int64_t parallel_n = (int64_t)seq_len * (int64_t)nhead;
+    
+    #pragma omp parallel for schedule(static)
+    for (int64_t idx = 0; idx < parallel_n; ++idx) {
+        int64_t s = idx / (int64_t)nhead;
+        int64_t h = idx % (int64_t)nhead;
 
-        for (int64_t h = 0; h < (int64_t)nhead; ++h) {
-            // position id
-            float pos = static_cast<float>(pos_id[s]);
-            const int64_t base = (s * nhead + h) * head_dim;
+        // position id
+        float pos = static_cast<float>(pos_id[s]);
+        const int64_t base = (s * nhead + h) * head_dim;
 
-            for (int64_t i = 0; i < half_dim; ++i) {
-                // compute rotation angle
-                float freq = std::pow(theta, 2.0f * (float)i / (float)head_dim);
-                
-                float angle = pos / freq;
+        for (int64_t i = 0; i < half_dim; ++i) {
+            // compute rotation angle
+            float freq = std::pow(theta, 2.0f * (float)i / (float)head_dim);
+            
+            float angle = pos / freq;
 
-                float cos_t = std::cos(angle);
-                float sin_t = std::sin(angle);
+            float cos_t = std::cos(angle);
+            float sin_t = std::sin(angle);
 
-                int even_idx = base + i;
-                int odd_idx  = base + half_dim + i;
+            int even_idx = base + i;
+            int odd_idx  = base + half_dim + i;
 
-                float x_even = cast<float>(in[even_idx]);
-                float x_odd  = cast<float>(in[odd_idx]);
+            float x_even = cast<float>(in[even_idx]);
+            float x_odd  = cast<float>(in[odd_idx]);
 
-                float y_even = x_even * cos_t - x_odd * sin_t;
-                float y_odd  = x_odd * cos_t + x_even * sin_t;
+            float y_even = x_even * cos_t - x_odd * sin_t;
+            float y_odd  = x_odd * cos_t + x_even * sin_t;
 
-                out[even_idx] = cast<T>(y_even);
-                out[odd_idx]  = cast<T>(y_odd);
-            }
+            out[even_idx] = cast<T>(y_even);
+            out[odd_idx]  = cast<T>(y_odd);
         }
     }
+    
 }
 
 namespace llaisys::ops::cpu {

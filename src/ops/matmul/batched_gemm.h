@@ -33,7 +33,7 @@ void batch_gemm_cpu_blocked_omp(
     using llaisys::utils::cast;
 
     omp_set_nested(1);
-#pragma omp parallel for schedule(static)
+// #pragma omp parallel for schedule(static)
   for (int64_t ib = 0; ib < (int64_t)batch; ++ib) {
     const T* A_batch = A + ib * batch_stride_A;
     const T* B_batch = B + ib * batch_stride_B;

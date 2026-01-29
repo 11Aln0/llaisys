@@ -5,6 +5,7 @@ import json
 import safetensors.torch
 import numpy as np
 import safetensors
+import time
 
 from ..libllaisys import (
     LIB_LLAISYS,
@@ -134,12 +135,13 @@ class Qwen2:
             max_new_tokens = 2048
 
         for _ in range(max_new_tokens):
+            start = time.time()
             next_token = self.infer(input_token_ids)
             token_ids.append(next_token)
             input_token_ids = [next_token]  # Feed only the last token for next step
             if next_token == self._meta.end_token:
                 break
-            print(f"Generated token: {next_token}", flush=True)
+            print(f"Generated token: {next_token}, using {time.time() - start:.2f} seconds", flush=True)
 
         return token_ids
 
